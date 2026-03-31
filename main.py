@@ -1,10 +1,18 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_file
 from database import init_db
 import models
 import time
+from flask_cors import CORS
+
+
 
 app = Flask(__name__)
 init_db()
+CORS(app)
+
+@app.route("/")
+def index():
+    return send_file("index.html")
 
 @app.route("/tickets", methods=["POST"])
 def create_ticket():

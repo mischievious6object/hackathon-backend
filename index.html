@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Ticket Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f6fa;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+        }
+
+        .ticket {
+            background: white;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 12px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .status {
+            padding: 4px 10px;
+            border-radius: 12px;
+            color: white;
+            font-size: 12px;
+        }
+
+        .status-open { background: #e74c3c; }
+        .status-in_progress { background: #f39c12; }
+        .status-closed { background: #2ecc71; }
+
+        .severity {
+            font-weight: bold;
+        }
+
+        .sev-low { color: #2ecc71; }
+        .sev-medium { color: #f39c12; }
+        .sev-high { color: #e74c3c; }
+
+        .meta {
+            font-size: 13px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+<h1>📋 Ticket Dashboard</h1>
+<div id="tickets"></div>
+
+<script>
+    const API_URL = "http://145.97.95.252:5000/tickets";
+    const REFRESH_INTERVAL = 5000; // change this
+
+    let previousIds = new Set();
+
+    function getStatusClass(status) {
+        return "status-" + (status || "").toLowerCase().replace(" ", "_");
+    }
+
+    function getSeverityClass(sev) {
+        return "sev-" + (sev || "").toLowerCase();
+    }
+
+    async function fetchTickets() {
+        try {
+            const res = await fetch(API_URL);
+            let tickets = await res.json();
+
+            // sort newest first
+            tickets.sort((a, b) => b.date - a.date);
+
+            const container = document.getElementById("tickets");
+            container.innerHTML = "";
+
+            tickets.forEach(ticket => {
+                const div = document.createElement("div");
+                div.className = "ticket";
+
+                const isNew = !previousIds.has(ticket.ticket_id);
+                if (isNew) {
+                    div.style.border = "2px solid #2ecc71";
+                }
+
+                div.innerHTML = `
+                    <div class="header">
+                        <div>
+                            <strong>#${ticket.ticket_id}</strong> - ${ticket.title}
+                        </div>
+                        <div class="status ${getStatusClass(ticket.status)}">
+                            ${ticket.status}
+                        </div>
+                    </div>
+
+                    <div class="meta">
+                        <span class="severity ${getSeverityClass(ticket.severity)}">
+                            Severity: ${ticket.severity}
+                        </span> |
+                        Category: ${ticket.category || "N/A"}
+                    </div>
+
+                    <p>${ticket.description || ""}</p>
+
+                    <div class="meta">
+                        👤 Employee: ${ticket.employee || "N/A"}<br>
+                        🧑 Client: ${ticket.client || "N/A"}<br>
+                        📍 Address: ${ticket.address || "N/A"}<br>
+                        🕒 ${new Date(ticket.date * 1000).toLocaleString()}
+                    </div>
+                `;
+
+                container.appendChild(div);
+                previousIds.add(ticket.ticket_id);
+            });
+
+        } catch (err) {
+            console.error("Error:", err);
+        }
+    }
+
+    fetchTickets();
+    setInterval(fetchTickets, REFRESH_INTERVAL);
+</script>
+
+</body>
+</html>

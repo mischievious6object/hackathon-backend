@@ -32,7 +32,9 @@ def init_db():
         latitude REAL,
         longitude REAL,
 
-        email_team_leader TEXT CHECK(length(email_team_leader) <= 200)
+        email_team_leader TEXT CHECK(length(email_team_leader) <= 200),
+
+        address TEXT
     )
     """)
 
