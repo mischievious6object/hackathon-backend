@@ -4,7 +4,6 @@ import time
 import os
 
 def clear_screen():
-    # Clears the terminal screen (works on Windows and Mac/Linux)
     os.system('cls' if os.name == 'nt' else 'clear')
 
 def display_tickets():
@@ -23,18 +22,17 @@ def display_tickets():
                 print("-" * 40)
 
                 for t in tickets:
-                    # Adjust keys based on your actual data structure in models.py
                     t_id = t.get('ticket_id', 'N/A')
                     t_date = time.ctime(t.get('date', 0))
                     # You can add more fields here as needed
                     print(f"{t_id:<5} | {t_date:<20} | {t.get('description', 'No info')}")
 
             print("\nPress Ctrl+C to stop.")
-            time.sleep(5)  # Wait for 5 seconds before the next update
+            time.sleep(5)
 
         except Exception as e:
             print(f"Error reading database: {e}")
-            time.sleep(10) # Wait a bit longer if there's an error
+            time.sleep(10)
 
 if __name__ == "__main__":
     display_tickets()

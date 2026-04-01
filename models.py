@@ -1,4 +1,5 @@
 from database import get_connection
+import sqlite3
 
 # enumerations
 SEVERITY = {"low", "medium", "high", "critical"}
@@ -10,7 +11,7 @@ def validate_ticket(data):
     if len(data["title"]) > 200: #we dont want users making long ticket names, thats what the description is for!
         raise ValueError("Title too long")
 
-    if "description" in data and len(data["description"]) > 2000: # 2000 is a soft spot for voice descriptions, we dont want users to rant their worklife into the database because their dog died or something
+    if "description" in data and len(data["description"]) > 4000: # 4000 is a soft spot for voice descriptions, we dont want users to rant their worklife into the database because their dog died or something
         raise ValueError("Description too long")
 
     if data["severity"] not in SEVERITY:
@@ -33,7 +34,7 @@ def create_ticket(data):
         INSERT INTO tickets (
             title, description, employee, client, date,
             severity, status, category,
-            room_id, latitude, longitude, email_team_leader, address
+            room, latitude, longitude, email_team_leader, address
         )
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
@@ -45,15 +46,39 @@ def create_ticket(data):
         data["severity"],
         data["status"],
         data["category"],
-        data.get("roomID"),
+        data.get("room"),
         data.get("latitude"),
         data.get("longitude"),
-        data.get("emailTeamLeader"),
+        data.get("email_team_leader"),
         data.get("address")
     ))
 
     conn.commit()
     conn.close()
+
+def update_ticket_field(ticket_id, column_name, new_value):
+    # check for columns we can modify
+    allowed_columns = [
+        "title", "description", "employee", "client",
+        "severity", "status", "category", "room_id",
+        "latitude", "longitude", "email_team_leader", "address"
+    ]
+
+    if column_name not in allowed_columns:
+        raise ValueError(f"Invalid column name: {column_name}")
+
+    conn = sqlite3.connect("tickets.db")
+    cursor = conn.cursor()
+
+    query = f"UPDATE tickets SET {column_name} = ? WHERE ticket_id = ?"
+
+    cursor.execute(query, (new_value, ticket_id))
+    conn.commit()
+
+    changes = conn.total_changes
+    conn.close()
+
+    return changes > 0
 
 
 def get_all_tickets():

@@ -27,7 +27,7 @@ def init_db():
         status TEXT,
         category TEXT,
 
-        room_id TEXT,
+        room TEXT,
 
         latitude REAL,
         longitude REAL,
